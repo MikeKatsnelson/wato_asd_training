@@ -13,6 +13,11 @@ CostmapNode::CostmapNode() : Node("costmap"), costmap_(robot::CostmapCore(this->
 
 void CostmapNode::initializeCostmap(){
   costmapVector.resize(arrayHeight,std::vector<int>(arrayWidth,0));
+   for (int i = 0; i<arrayHeight;i++){
+    for (int j = 0; j<arrayWidth;j++){
+      costmapVector[i][j] = 0;
+    }
+   }
 }
 
 void CostmapNode::convertToGrid(double range, double angle, int& x_grid, int& y_grid){
@@ -25,7 +30,7 @@ void CostmapNode::convertToGrid(double range, double angle, int& x_grid, int& y_
 //}
 
 void CostmapNode::inflateObstacles(){
-  double inflation_rad = 1.0;
+  double inflation_rad = 1.0/resolution;
   double max_cost = 100.0;
   for (int i = 0; i<arrayHeight;i++){
     for (int j = 0; j<arrayWidth;j++){

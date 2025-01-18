@@ -20,7 +20,7 @@ void CostmapNode::initializeCostmap(){
    }
 }
 
-void CostmapNode::convertToGrid(double range, double angle, int& x_grid, int& y_grid){
+void CostmapNode::convertToGrid(double range, double angle, int& x_grid, int& y_grid){//this acts as if we were in a corner
   x_grid = range*std::cos(angle);
   y_grid = range*std::sin(angle);
 }

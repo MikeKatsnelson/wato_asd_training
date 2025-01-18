@@ -70,7 +70,11 @@ void CostmapNode::publishCostmap() {
   message.info.resolution =resolution;
   message.info.width = arrayWidth;
   message.info.height = arrayHeight;
-  message.header.frame_id = "Costmap Occupancy Grid";
+  message.info.origin.position.x = -width/2;
+  message.info.origin.position.y = -height/2;
+
+  message.header.frame_id = "robot/chassis/lidar";//"/costmap";//"Costmap Occupancy Grid";
+  //message.header = msg->header;
   //message.info.origin  = ;
   message.data = OccupancyMap;
   RCLCPP_INFO(this->get_logger(), "Publishing: Occupancy Grid");//, message.data.c_str());
@@ -82,8 +86,8 @@ void CostmapNode::publishCostmap() {
 
 void CostmapNode::laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan){
 // Step 1: Initialize costmap
-    width = 30;
-    height = 30;
+    width = 40;
+    height = 40;
     resolution = 0.1;
     arrayHeight = height/resolution;
     arrayWidth = width/resolution;
@@ -98,7 +102,10 @@ void CostmapNode::laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr sca
         if (range < scan->range_max && range > scan->range_min) {
             // Calculate grid coordinates
             int x_grid, y_grid;
-            convertToGrid(range, angle, x_grid, y_grid);
+            convertToGrid(range/resolution, angle, x_grid, y_grid);
+
+            x_grid += arrayWidth/2;
+            y_grid += arrayHeight/2;
             if (x_grid < arrayWidth && x_grid >=0 && y_grid <arrayHeight && y_grid >=0){
               
               costmapVector[y_grid][x_grid] = 100;//markObstacle(x_grid, y_grid);
@@ -111,6 +118,9 @@ void CostmapNode::laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr sca
     // Step 3: Inflate obstacles
     inflateObstacles();
  
+
+
+
     // Step 4: Publish costmap
     publishCostmap();
 }

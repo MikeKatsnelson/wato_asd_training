@@ -39,13 +39,20 @@ void MapMemoryNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
       last_x = x;
       last_y = y;
       should_update_map_ = true;
+      RCLCPP_INFO(this->get_logger(), "distance threshold passed");
   }
 }
 
 void MapMemoryNode::updateMap() {
+  // global_map_.info.width = 300;
+  // global_map_.info.height = 300;
+  // map_pub_->publish(global_map_);
+  // return;
+  
   if (should_update_map_ && costmap_updated_) {
     integrateCostmap();
     map_pub_->publish(global_map_);
+    RCLCPP_INFO(this->get_logger(), "Publishing: New global map");
     should_update_map_ = false;
   }
 }
@@ -57,6 +64,7 @@ void MapMemoryNode::updateMap() {
       // copy latest costmap into global costmap
         // takes care of grid alignment (ensures both are same size)
       global_map_ = latest_costmap_;
+      RCLCPP_INFO(this->get_logger(), "init globa_map");
       return;
     }
     

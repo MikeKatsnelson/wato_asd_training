@@ -77,6 +77,7 @@ void MapMemoryNode::updateMap() {
     integrateCostmap();
     
     // publish
+    message.header.stamp = this->get_clock()->now();
     map_pub_->publish(global_map_);
     should_update_map_ = false;
     costmap_updated_ = false;

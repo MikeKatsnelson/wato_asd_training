@@ -26,7 +26,7 @@ MapMemoryNode::MapMemoryNode() :
 
   // init global map
   global_map_.header.frame_id = "sim_world";
-  global_map_.info.resolution = 0.1;
+  global_map_.info.resolution = 0.3;
   global_map_.info.width = 30 / global_map_.info.resolution;
   global_map_.info.height = 30 / global_map_.info.resolution;
   global_map_.info.origin.position.x = -global_map_.info.width / 2;
@@ -34,8 +34,6 @@ MapMemoryNode::MapMemoryNode() :
 
   global_map_.data.resize(global_map_.info.width * global_map_.info.height);
   std::fill(global_map_.data.begin(), global_map_.data.end(), 0);
-
-    RCLCPP_INFO(this->get_logger(), "global origin.x: %d, global origin.y: %d",  global_map_.info.width, global_map_.info.height);
 }
 
 /*
@@ -62,9 +60,9 @@ void MapMemoryNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
       last_x = x;
       last_y = y;
       should_update_map_ = true;
-      //latest_odom_ = *msg;
+      latest_odom_ = *msg;
   }
-  latest_odom_ = *msg;
+  //latest_odom_ = *msg;
 }
 
 /*
@@ -72,6 +70,7 @@ void MapMemoryNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
  * Update global costmap if conditions are met
  */
 void MapMemoryNode::updateMap() {
+  RCLCPP_INFO(this->get_logger(), "global origin.x: %d, global origin.y: %d",  global_map_.info.width, global_map_.info.height);
 
   if (should_update_map_ && costmap_updated_) {
     // integrate latest "local" costmap into global costmap
@@ -118,28 +117,30 @@ void MapMemoryNode::integrateCostmap() {
       double local_x = (i + latest_costmap_.info.origin.position.x) * latest_costmap_.info.resolution;
       double local_y = (j + latest_costmap_.info.origin.position.y) * latest_costmap_.info.resolution;
       
-      if (i = latest_costmap_.info.width - 1)
-        RCLCPP_INFO(this->get_logger(), "local_x: %f, local_y: %f", local_x, local_y);     
+     //if (i = latest_costmap_.info.width - 1)
+        //RCLCPP_INFO(this->get_logger(), "local_x: %f, local_y: %f", local_x, local_y);     
 
       // get the "global" coordinates of the cell
         // i.e where it actually is on the global map
       double global_x = local_x * std::cos(robot_yaw) - local_y * std::sin(robot_yaw) + robot_x;
       double global_y = local_x * std::sin(robot_yaw) + local_y * std::cos(robot_yaw) + robot_y;
-      if (i = latest_costmap_.info.width - 1)
-        RCLCPP_INFO(this->get_logger(), "global_x: %f, global_y: %f", global_x, global_y);      
+      //if (i = latest_costmap_.info.width - 1)
+        //RCLCPP_INFO(this->get_logger(), "global_x: %f, global_y: %f", global_x, global_y);      
       
       // translate global cooridnates into "cells" in costmap
       int global_i = (global_x / global_map_.info.resolution) - global_map_.info.origin.position.x;
       int global_j = (global_y / global_map_.info.resolution) - global_map_.info.origin.position.y;
-      if (i = latest_costmap_.info.width - 1)
-        RCLCPP_INFO(this->get_logger(), "global_i: %d, global_j: %d", global_i, global_j);      
+      if (i = latest_costmap_.info.width - 1) {
+        //RCLCPP_INFO(this->get_logger(), "resoluton: %d, origin.x: %d, origin.y: %d", global_map_.info.resolution, global_map_.info.origin.position.x, global_map_.info.origin.position.y);      
+        //RCLCPP_INFO(this->get_logger(), "global_i: %d, global_j: %d", global_i, global_j);  
+      }    
 
       // skip if index is out of bounds
       if ((global_i < 0 || global_i >= global_map_.info.width) || (global_j < 0 || global_j >= global_map_.info.height)) {
         continue;
       }
 
-      RCLCPP_INFO(this->get_logger(), "valid index - global_i: %d, global_j: %d", global_i, global_j);
+      //RCLCPP_INFO(this->get_logger(), "valid index - global_i: %d, global_j: %d", global_i, global_j);
 
       // index in global costmap
       int global_index = global_j * global_map_.info.width + global_i;

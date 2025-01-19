@@ -18,7 +18,7 @@
   <!-- nav_msg and tf2 -->
   <depend>nav_msgs</depend>
   <depend>tf2</depend>
-   <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
 
   <!--https://www.ros.org/reps/rep-0149.html#export-->
   <export>

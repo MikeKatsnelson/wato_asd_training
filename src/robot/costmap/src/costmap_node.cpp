@@ -77,7 +77,7 @@ void CostmapNode::publishCostmap() {
   //message.header = msg->header;
   //message.info.origin  = ;
   message.data = OccupancyMap;
-  RCLCPP_INFO(this->get_logger(), "Publishing: Occupancy Grid");//, message.data.c_str());
+  //RCLCPP_INFO(this->get_logger(), "Publishing: Occupancy Grid");//, message.data.c_str());
   costmap_pub_->publish(message);
 }
 
@@ -88,7 +88,7 @@ void CostmapNode::laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr sca
 // Step 1: Initialize costmap
     width = 40;
     height = 40;
-    resolution = 0.1;
+    resolution = 1;//0.1;
     arrayHeight = height/resolution;
     arrayWidth = width/resolution;
    

@@ -1,6 +1,108 @@
+#include <cmath>
+#include <optional>
+
+#include  <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+
 #include "control_node.hpp"
 
-ControlNode::ControlNode(): Node("control"), control_(robot::ControlCore(this->get_logger())) {}
+ControlNode::ControlNode(): Node("control"), control_(robot::ControlCore(this->get_logger())) {
+  // Initialize parameters
+  lookahead_distance_ = 1.0;
+  goal_tolerance_ = 0.1;   
+  linear_speed_ = 0.5;       
+
+  // Subscribers and Publishers
+  path_sub_ = this->create_subscription<nav_msgs::msg::Path>(
+      "/path", 10, [this](const nav_msgs::msg::Path::SharedPtr msg) { current_path_ = msg; });
+
+  odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+      "/odom/filtered", 10, [this](const nav_msgs::msg::Odometry::SharedPtr msg) { robot_odom_ = msg; });
+
+  cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+
+  // Timer
+  control_timer_ = this->create_wall_timer(
+      std::chrono::milliseconds(100), [this]() { controlLoop(); });
+
+  // Data
+  nav_msgs::msg::Path::SharedPtr current_path_;
+  nav_msgs::msg::Odometry::SharedPtr robot_odom_;
+
+  // Parameters
+  double lookahead_distance_;
+  double goal_tolerance_;
+  double linear_speed_;
+}
+
+void ControlNode::controlLoop(){
+  // Skip control if no path or odometry data is available
+  if (!current_path_ || !robot_odom_) {
+      return;
+  }
+
+  // Find the lookahead point
+  auto lookahead_point = findLookaheadPoint();
+  if (!lookahead_point) {
+      return;  // No valid lookahead point found
+  }
+
+  // Compute velocity command
+  auto cmd_vel = computeVelocity(*lookahead_point);
+
+  // Publish the velocity command
+  cmd_vel_pub_->publish(cmd_vel);
+}
+
+std::optional<geometry_msgs::msg::PoseStamped> ControlNode::findLookaheadPoint() {
+  // TODO: Implement logic to find the lookahead point on the path
+  
+  /*
+    nav_msgs::msg::Path is an array of geometry_msgs::msg::PoseStamped. Loop through each point and
+    computeDistance() between point and robot location (from odometry) until we ger distance closest to lookahead_distance
+  */
+  for (int i = 0; i < sizeof(current_path.poses), i++) {
+    if (computeDistance(robot_odom_.pose.pose.position, current_path.poses[i].position) - lookahead_distance_ < 0.01) {
+      return current_path.poses[i];
+    }
+  } 
+  
+  
+  return std::nullopt;  // Replace with a valid point when implemented // -- or keep as nullopt if cant find a path
+}
+
+geometry_msgs::msg::Twist ControlNode::computeVelocity(const geometry_msgs::msg::PoseStamped &target) {
+  // TODO: Implement logic to compute velocity commands
+  geometry_msgs::msg::Twist cmd_vel;
+
+  /*
+    Using current orientation (from odom) and the position of the target, somehow find the angular velocity
+      (linear velocity is fixed)
+
+    Convert quarterion from odom to yaw to help
+
+     1. Get robot's yaw
+     2. Get position's
+  */
+
+ 
+
+
+  return cmd_vel;
+}
+
+double ControlNode::computeDistance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b) {
+  return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
+}
+
+double ControlNode::extractYaw(const geometry_msgs::msg::Quaternion &quat) {n
+  tf2::Quaternion quat(quat.x, quat.y, quat.z, quat.w);
+  tf2::Matrix3x3 mat(quat);
+  double roll, pitch, yaw;
+  mat.getRPY(roll, pitch, yaw);
+
+  return yaw;
+}
 
 int main(int argc, char ** argv)
 {

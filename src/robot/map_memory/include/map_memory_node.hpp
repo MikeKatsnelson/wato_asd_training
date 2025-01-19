@@ -18,6 +18,8 @@ class MapMemoryNode : public rclcpp::Node {
 
     void updateMap();
     void integrateCostmap();
+
+    double quaternionToYaw(const geometry_msgs::msg::Quaternion &q);
     
     robot::MapMemoryCore map_memory_;
     
@@ -31,11 +33,12 @@ class MapMemoryNode : public rclcpp::Node {
     nav_msgs::msg::OccupancyGrid global_map_;
     double last_x, last_y;
     const double distance_threshold;
-    bool costmap_updated_ = false;
 
     nav_msgs::msg::OccupancyGrid latest_costmap_;
-    bool should_update_map_ = false;
+    nav_msgs::msg::Odometry latest_odom_;
 
+    bool costmap_updated_ = false;
+    bool should_update_map_ = false;
 };
 
 #endif 

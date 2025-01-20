@@ -2,6 +2,9 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <geometry_msgs/msg/quaternion.h>
 
+#include <set>
+#include <utility>
+
 #include "map_memory_node.hpp"
 
 MapMemoryNode::MapMemoryNode() : 
@@ -26,11 +29,13 @@ MapMemoryNode::MapMemoryNode() :
 
   // init global map
   global_map_.header.frame_id = "sim_world";
-  global_map_.info.resolution = 0.3;
-  global_map_.info.width = 30 / global_map_.info.resolution;
-  global_map_.info.height = 30 / global_map_.info.resolution;
-  global_map_.info.origin.position.x = -global_map_.info.width / 2;
-  global_map_.info.origin.position.y = -global_map_.info.height / 2;
+  global_map_.info.resolution = 1;
+  global_map_.info.width = std::ceil(30 / global_map_.info.resolution);
+  global_map_.info.height = std::ceil(30 / global_map_.info.resolution);
+  global_map_.info.origin.position.x = -15;
+  global_map_.info.origin.position.y = -15;
+  // global_map_.info.origin.position.x =  -(static_cast<double>(global_map_.info.width) / 2.0);
+  // global_map_.info.origin.position.y =-(static_cast<double>(global_map_.info.height) / 2.0);
 
   global_map_.data.resize(global_map_.info.width * global_map_.info.height);
   std::fill(global_map_.data.begin(), global_map_.data.end(), 0);
@@ -70,19 +75,17 @@ void MapMemoryNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
  * Update global costmap if conditions are met
  */
 void MapMemoryNode::updateMap() {
-  RCLCPP_INFO(this->get_logger(), "global origin.x: %d, global origin.y: %d",  global_map_.info.width, global_map_.info.height);
-
   if (should_update_map_ && costmap_updated_) {
     // integrate latest "local" costmap into global costmap
     integrateCostmap();
     
     // publish
-    message.header.stamp = this->get_clock()->now();
+    global_map_.header.stamp = this->get_clock()->now();
     map_pub_->publish(global_map_);
     should_update_map_ = false;
     costmap_updated_ = false;
 
-    //RCLCPP_INFO(this->get_logger(), "Publishing: New global map");
+    RCLCPP_INFO(this->get_logger(), "Publishing: New global map");
   }
 }
 
@@ -106,6 +109,8 @@ void MapMemoryNode::integrateCostmap() {
   /* -- -- */
 
   for (int j = 0; j < latest_costmap_.info.height; j++) {
+    std::set<std::pair<int, int>> global_indices;
+
     for (int i = 0; i < latest_costmap_.info.width; i++) {
       // index in local costmap
       int local_index = j * latest_costmap_.info.width + i;
@@ -129,22 +134,36 @@ void MapMemoryNode::integrateCostmap() {
         //RCLCPP_INFO(this->get_logger(), "global_x: %f, global_y: %f", global_x, global_y);      
       
       // translate global cooridnates into "cells" in costmap
-      int global_i = (global_x / global_map_.info.resolution) - global_map_.info.origin.position.x;
-      int global_j = (global_y / global_map_.info.resolution) - global_map_.info.origin.position.y;
+      int global_i = (global_x - global_map_.info.origin.position.x) / global_map_.info.resolution;
+      int global_j = (global_y - global_map_.info.origin.position.y) / global_map_.info.resolution;
       if (i = latest_costmap_.info.width - 1) {
-        //RCLCPP_INFO(this->get_logger(), "resoluton: %d, origin.x: %d, origin.y: %d", global_map_.info.resolution, global_map_.info.origin.position.x, global_map_.info.origin.position.y);      
-        //RCLCPP_INFO(this->get_logger(), "global_i: %d, global_j: %d", global_i, global_j);  
+        //RCLCPP_INFO(this->get_logger(), "resoluton: %f, origin.x: %f, origin.y: %f", global_map_.info.resolution, global_map_.info.origin.position.x, global_map_.info.origin.position.y);      
+        // RCLCPP_INFO(this->get_logger(), "global_i: %d, global_j: %d", global_i, global_j);  
       }    
+
+      std::pair global_index_pair = {global_x, global_y};
+      if (global_indices.find(global_index_pair) != global_indices.end()) {
+        continue;
+      }
+      global_indices.insert(global_index_pair);
 
       // skip if index is out of bounds
       if ((global_i < 0 || global_i >= global_map_.info.width) || (global_j < 0 || global_j >= global_map_.info.height)) {
         continue;
       }
 
-      //RCLCPP_INFO(this->get_logger(), "valid index - global_i: %d, global_j: %d", global_i, global_j);
-
       // index in global costmap
       int global_index = global_j * global_map_.info.width + global_i;
+
+      RCLCPP_INFO(this->get_logger(), "-- Valid Index --");
+      RCLCPP_INFO(this->get_logger(), "local_i: %d, local_j: %d", i, j);
+      RCLCPP_INFO(this->get_logger(), "local_x: %f, local_y: %f", local_x, local_y);
+      RCLCPP_INFO(this->get_logger(), "global_x: %f, global_y: %f", global_x, global_y);
+      RCLCPP_INFO(this->get_logger(), "global_i: %d, global_j: %d", global_i, global_j);
+      // if (latest_costmap_.data[local_index] > 0)
+      //   RCLCPP_INFO(this->get_logger(), "costmap data: %d, global map data: %d", latest_costmap_.data[local_index], global_map_.data[global_index]);
+
+      RCLCPP_INFO(this->get_logger(), "costmap data: %d, global map data: %d", latest_costmap_.data[local_index], global_map_.data[global_index]);
 
       // only overwrite global costmap if an object was detected in the same cell in local costmap
         // do this by taking the max of equilavent cells in local and global costmaps

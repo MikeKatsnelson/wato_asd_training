@@ -208,11 +208,12 @@ while (found == false && !open.empty()){
             RCLCPP_WARN(this->get_logger(), "4");
              
             if (neighbor.x < (adjustedWidth/-2) || neighbor.y  < (adjustedHeight/-2) || neighbor.x >= adjustedWidth/2 || neighbor.y >= adjustedHeight/2 
-            || close.find(neighbor) != close.end() ){ 
-            //|| current_map_.data[(neighbor.y+adjustedHeight/2)*adjustedWidth + (neighbor.x+adjustedWidth/2)] != 0 ) {//if in close or not traversable
-                //RCLCPP_WARN(this->get_logger(), "failed pos(x:%d, y:%d)", neighbor.x, neighbor.y);
-                continue;
+            || close.find(neighbor) != close.end() || current_map_.data[(neighbor.y+(adjustedHeight/2))*adjustedWidth + (neighbor.x+(adjustedWidth/2))] != 0 ) {//if in close or not traversable
+                //RCLCPP_WARN(this->get_logger(), "failed pos(x:%d, y:%d)", neighbor.x, neighbor.y);   ){ 
+            //
                 RCLCPP_WARN(this->get_logger(), "8");
+                continue;
+                
                 //obstacle check may not be working
             }
             //current_map_.data[(  neighbor.y   +adjustedHeight/2)*adjustedWidth +    (neighbor.x+adjustedWidth/2)] != 0 

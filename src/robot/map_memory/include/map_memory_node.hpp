@@ -22,7 +22,6 @@ class MapMemoryNode : public rclcpp::Node {
 
     double quaternionToYaw(const geometry_msgs::msg::Quaternion &q);
 
-    
     robot::MapMemoryCore map_memory_;
     
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr costmap_sub_;
@@ -39,6 +38,7 @@ class MapMemoryNode : public rclcpp::Node {
     nav_msgs::msg::OccupancyGrid latest_costmap_;
     nav_msgs::msg::Odometry latest_odom_;
 
+    bool first_publish = true;
     bool costmap_updated_ = false;
     bool should_update_map_ = false;
 };

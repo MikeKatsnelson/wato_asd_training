@@ -148,9 +148,9 @@ void PlannerNode::planPath() {
     //open[start] = current;
     //while open set is not empty
     bool found = false;
-RCLCPP_WARN(this->get_logger(), "0");
+//RCLCPP_WARN(this->get_logger(), "0");
 while (found == false && !open.empty()){
-    RCLCPP_WARN(this->get_logger(), "1");
+    //RCLCPP_WARN(this->get_logger(), "1");
         //make current node the open node with lowest f_score
         bool first = true;
         //AStarNode current;
@@ -160,7 +160,7 @@ while (found == false && !open.empty()){
                 first = false;
             }         
         }
-        RCLCPP_WARN(this->get_logger(), "2");
+        //RCLCPP_WARN(this->get_logger(), "2");
         //RCLCPP_WARN(this->get_logger(), "current pos(x:%d, y:%d)", current.index.x, current.index.y);
         //remove current from open
         open.erase(current.index);
@@ -169,13 +169,13 @@ while (found == false && !open.empty()){
 
         //if current is the target node, path.pushback current node until home
         if (current.index == end){
-            RCLCPP_WARN(this->get_logger(), "goal found");
+            //RCLCPP_WARN(this->get_logger(), "goal found");
             found = true;
             nav_msgs::msg::Path TempPath;
-            RCLCPP_WARN(this->get_logger(), "5");
+            //RCLCPP_WARN(this->get_logger(), "5");
             geometry_msgs::msg::PoseStamped TraversalPose;
             while (current.index != start){
-                RCLCPP_WARN(this->get_logger(), "6");
+                //RCLCPP_WARN(this->get_logger(), "6");
                 TraversalPose.header.frame_id = "sim_world";
                 TraversalPose.pose.position.x = current.index.x*current_map_.info.resolution;
                 TraversalPose.pose.position.y = current.index.y*current_map_.info.resolution;
@@ -205,13 +205,13 @@ while (found == false && !open.empty()){
             //RCLCPP_WARN(this->get_logger(), "Caluculating neighbors");
             //RCLCPP_WARN(this->get_logger(), "neighbor pos(x:%d, y:%d)", neighbor.x, neighbor.y);
             //is the if statement correct?
-            RCLCPP_WARN(this->get_logger(), "4");
+            //RCLCPP_WARN(this->get_logger(), "4");
              
             if (neighbor.x < (adjustedWidth/-2) || neighbor.y  < (adjustedHeight/-2) || neighbor.x >= adjustedWidth/2 || neighbor.y >= adjustedHeight/2 
             || close.find(neighbor) != close.end() || current_map_.data[(neighbor.y+(adjustedHeight/2))*adjustedWidth + (neighbor.x+(adjustedWidth/2))] != 0 ) {//if in close or not traversable
                 //RCLCPP_WARN(this->get_logger(), "failed pos(x:%d, y:%d)", neighbor.x, neighbor.y);   ){ 
             //
-                RCLCPP_WARN(this->get_logger(), "8");
+               // RCLCPP_WARN(this->get_logger(), "8");
                 continue;
                 
                 //obstacle check may not be working
@@ -220,7 +220,7 @@ while (found == false && !open.empty()){
 
             // neighbor.y = 
             //current_map_.info.resolution
-            RCLCPP_WARN(this->get_logger(), "9");
+           // RCLCPP_WARN(this->get_logger(), "9");
             
             double temp_g_score = (current.f_score-h_score(current.index,end)) +1;//current g score +1
             double temp_h_score = h_score(neighbor,end);
@@ -232,14 +232,14 @@ while (found == false && !open.empty()){
                 AStarNode newNode(neighbor,temp_g_score+temp_h_score,current.index);//set f cost of neighbor and parent
                 open.emplace(neighbor,newNode);
                 //RCLCPP_WARN(this->get_logger(), "adding to open list");
-                RCLCPP_WARN(this->get_logger(), "10");
+                //RCLCPP_WARN(this->get_logger(), "10");
             }
             else if ((open.at(neighbor).f_score-temp_h_score) > temp_g_score){// new path is shorter
                 //set f cost of neighbor, and add neighbor to open
                 //open[neighbor] = AStarNode(neighbor,temp_g_score+h_score(neighbor,end),current.index);
                 open.at(neighbor).f_score = temp_g_score+temp_h_score;
                 open.at(neighbor).parentIndex = current.index;
-                RCLCPP_WARN(this->get_logger(), "11");
+                //RCLCPP_WARN(this->get_logger(), "11");
             }     
         }
         //for (const auto& [key,value] : open){//log open set

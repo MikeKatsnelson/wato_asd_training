@@ -9,7 +9,7 @@
 ControlNode::ControlNode(): Node("control"), control_(robot::ControlCore(this->get_logger())) {
   // Initialize parameters
   lookahead_distance_ = 1;
-  goal_tolerance_ = 2;   
+  //goal_tolerance_ = 2;   
   linear_speed_ = 0.5;       
 
   // Subscribers and Publishers
@@ -36,19 +36,20 @@ ControlNode::ControlNode(): Node("control"), control_(robot::ControlCore(this->g
 void ControlNode::controlLoop(){
   // Skip control if no path or odometry data is available
   if (!current_path_ || !robot_odom_) {
-      RCLCPP_WARN(this->get_logger(), "no path or odom");
+      RCLCPP_WARN(this->get_logger(), "0");
       stopMoving();
       return;
   }
 
   // Find the lookahead point
+  RCLCPP_WARN(this->get_logger(), "1");
   auto lookahead_point = findLookaheadPoint();
   if (!lookahead_point) {
-    //RCLCPP_WARN(this->get_logger(), "no lookahead point");
+    RCLCPP_WARN(this->get_logger(), "4");
     stopMoving();
-      return;  // No valid lookahead point found
+    return;  // No valid lookahead point found
   }
-
+RCLCPP_WARN(this->get_logger(), "5");
   // Compute velocity command
   auto cmd_vel = computeVelocity(*lookahead_point);
   RCLCPP_WARN(this->get_logger(), "velocities computed");
@@ -77,18 +78,15 @@ std::optional<geometry_msgs::msg::PoseStamped> ControlNode::findLookaheadPoint()
     nav_msgs::msg::Path is an array of geometry_msgs::msg::PoseStamped. Loop through each point and
     computeDistance() between point and robot location (from odometry) until we ger distance closest to lookahead_distance
   */
- //should it be in reverse?
-  //for (int i = 0; i < current_path_->poses.size(); i++) {
-   // RCLCPP_WARN(this->get_logger(), "looking for lookahead point");
-    //if (computeDistance(robot_odom_->pose.pose.position, current_path_->poses[i].pose.position) - lookahead_distance_ < goal_tolerance_) {//within on then select that node
-    ///  return current_path_->poses[i];
-    //}
+    RCLCPP_WARN(this->get_logger(), "2");
     for (int i = current_path_->poses.size() - 1; i >= 0; i--) { 
-    RCLCPP_WARN(this->get_logger(), "looking for lookahead point");
-    if (computeDistance(robot_odom_->pose.pose.position, current_path_->poses[i].pose.position) - lookahead_distance_ < goal_tolerance_) {//within on then select that node
+    RCLCPP_WARN(this->get_logger(), "distance: %lf",computeDistance(robot_odom_->pose.pose.position, current_path_->poses[i].pose.position));
+    RCLCPP_WARN(this->get_logger(), "3");
+    if (computeDistance(robot_odom_->pose.pose.position, current_path_->poses[i].pose.position)  < lookahead_distance_){// goal_tolerance_) {//within on then select that node
+        RCLCPP_WARN(this->get_logger(), "3.5");
         return current_path_->poses[i];
     }
-}
+    }
   
   
   return std::nullopt;  // Replace with a valid point when implemented // -- or keep as nullopt if cant find a path

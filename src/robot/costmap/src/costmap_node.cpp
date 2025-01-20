@@ -30,7 +30,7 @@ void CostmapNode::convertToGrid(double range, double angle, int& x_grid, int& y_
 //}
 
 void CostmapNode::inflateObstacles(){
-  double inflation_rad = 1.0/resolution;
+  double inflation_rad = 0.5/resolution;
   double max_cost = 100.0;
   for (int i = 0; i<arrayHeight;i++){
     for (int j = 0; j<arrayWidth;j++){

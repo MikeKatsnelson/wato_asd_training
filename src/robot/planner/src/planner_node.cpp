@@ -169,7 +169,7 @@ while (found == false && !open.empty()){
 
         //if current is the target node, path.pushback current node until home
         if (current.index == end){
-            //RCLCPP_WARN(this->get_logger(), "goal found");
+            RCLCPP_WARN(this->get_logger(), "goal found");
             found = true;
             nav_msgs::msg::Path TempPath;
             //RCLCPP_WARN(this->get_logger(), "5");
@@ -181,7 +181,7 @@ while (found == false && !open.empty()){
                 TraversalPose.pose.position.y = current.index.y*current_map_.info.resolution;
                 TempPath.poses.push_back(TraversalPose);
                 
-              // RCLCPP_WARN(this->get_logger(), "retrace pos(x:%d, y:%d))", current.index.x, current.index.y);//,value.f_score);
+                RCLCPP_WARN(this->get_logger(), "retrace pos(x:%d, y:%d))", current.index.x, current.index.y);//,value.f_score);
                 if (close.find(current.parentIndex)!= close.end()) { //inside the close 
                   current = close.at(current.parentIndex);//current = close[current.parentIndex];  
                 }

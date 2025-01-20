@@ -42,14 +42,14 @@ void ControlNode::controlLoop(){
   }
 
   // Find the lookahead point
-  RCLCPP_WARN(this->get_logger(), "1");
+  //RCLCPP_WARN(this->get_logger(), "1");
   auto lookahead_point = findLookaheadPoint();
   if (!lookahead_point) {
-    RCLCPP_WARN(this->get_logger(), "4");
+   // RCLCPP_WARN(this->get_logger(), "4");
     stopMoving();
     return;  // No valid lookahead point found
   }
-RCLCPP_WARN(this->get_logger(), "5");
+//RCLCPP_WARN(this->get_logger(), "5");
   // Compute velocity command
   auto cmd_vel = computeVelocity(*lookahead_point);
   RCLCPP_WARN(this->get_logger(), "velocities computed");
@@ -79,13 +79,14 @@ std::optional<geometry_msgs::msg::PoseStamped> ControlNode::findLookaheadPoint()
     computeDistance() between point and robot location (from odometry) until we ger distance closest to lookahead_distance
   */
     RCLCPP_WARN(this->get_logger(), "2");
+    RCLCPP_WARN(this->get_logger(), "path array size:%d ",current_path_->poses.size());
     for (int i = current_path_->poses.size() - 1; i >= 0; i--) { 
-    RCLCPP_WARN(this->get_logger(), "distance: %lf",computeDistance(robot_odom_->pose.pose.position, current_path_->poses[i].pose.position));
-    RCLCPP_WARN(this->get_logger(), "3");
-    if (computeDistance(robot_odom_->pose.pose.position, current_path_->poses[i].pose.position)  < lookahead_distance_){// goal_tolerance_) {//within on then select that node
-        RCLCPP_WARN(this->get_logger(), "3.5");
-        return current_path_->poses[i];
-    }
+      RCLCPP_WARN(this->get_logger(), "distance: %lf",computeDistance(robot_odom_->pose.pose.position, current_path_->poses[i].pose.position));
+      RCLCPP_WARN(this->get_logger(), "3");
+      if (computeDistance(robot_odom_->pose.pose.position, current_path_->poses[i].pose.position)  < lookahead_distance_){// goal_tolerance_) {//within on then select that node
+          RCLCPP_WARN(this->get_logger(), "3.5");
+          return current_path_->poses[i];
+      }
     }
   
   
@@ -107,7 +108,7 @@ geometry_msgs::msg::Twist ControlNode::computeVelocity(const geometry_msgs::msg:
   target.pose.position.x-robot_odom_->pose.pose.position.x);
   //float YawError = desiredYaw-currentYaw;
   float YawError = fmod(desiredYaw - currentYaw + M_PI, 2 * M_PI) - M_PI;
-  float kp = 0.5;//tune the proportional gain
+  float kp =0.5;//tune the proportional gain
   float angularVelocity = YawError*kp;
   //float currentPos = odom_sub_.pose.pose.position.x;
   cmd_vel.angular.x = 0;

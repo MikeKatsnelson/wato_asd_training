@@ -37,6 +37,8 @@ void PlannerNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
         planPath();
     }
  
+
+
     void PlannerNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {//update robot position
         robot_pose_ = msg->pose.pose;
     }
@@ -52,6 +54,14 @@ void PlannerNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
                 RCLCPP_INFO(this->get_logger(), "Replanning due to timeout or progress...");
                 planPath();
             }
+        }
+        else if (state_ == State::WAITING_FOR_GOAL){
+                nav_msgs::msg::Path path;
+                path.poses = {};
+                path.header.stamp = this->get_clock()->now();
+                path.header.frame_id = "sim_world";
+                RCLCPP_WARN(this->get_logger(), "publishing empty path");
+                path_pub_->publish(path);
         }
 
     }
@@ -122,8 +132,8 @@ void PlannerNode::planPath() {
     int GoalPosX = std::round(goal_.point.x)/current_map_.info.resolution ;
     int GoalPosY = std::round(goal_.point.y)/current_map_.info.resolution;
     
-    int adjustedWidth =current_map_.info.width/current_map_.info.resolution;
-    int adjustedHeight =current_map_.info.height/current_map_.info.resolution;
+    int adjustedWidth =  current_map_.info.width;///current_map_.info.width/current_map_.info.resolution;
+    int adjustedHeight =current_map_.info.height;//current_map_.info.height/current_map_.info.resolution;
 
     CellIndex start(robotPosX,robotPosY);//(goal_.point.x,robot_pose_.position.y/current_map_.info.resolution);
     RCLCPP_WARN(this->get_logger(), "start pos(x:%d, y:%d)", start.x, start.y);
@@ -138,8 +148,9 @@ void PlannerNode::planPath() {
     //open[start] = current;
     //while open set is not empty
     bool found = false;
+RCLCPP_WARN(this->get_logger(), "0");
 while (found == false && !open.empty()){
-    RCLCPP_WARN(this->get_logger(), "in while loop");
+    RCLCPP_WARN(this->get_logger(), "1");
         //make current node the open node with lowest f_score
         bool first = true;
         //AStarNode current;
@@ -149,6 +160,7 @@ while (found == false && !open.empty()){
                 first = false;
             }         
         }
+        RCLCPP_WARN(this->get_logger(), "2");
         //RCLCPP_WARN(this->get_logger(), "current pos(x:%d, y:%d)", current.index.x, current.index.y);
         //remove current from open
         open.erase(current.index);
@@ -160,16 +172,16 @@ while (found == false && !open.empty()){
             RCLCPP_WARN(this->get_logger(), "goal found");
             found = true;
             nav_msgs::msg::Path TempPath;
-        
+            RCLCPP_WARN(this->get_logger(), "5");
             geometry_msgs::msg::PoseStamped TraversalPose;
             while (current.index != start){
-                
+                RCLCPP_WARN(this->get_logger(), "6");
                 TraversalPose.header.frame_id = "sim_world";
-                TraversalPose.pose.position.x = current.index.x;
-                TraversalPose.pose.position.y = current.index.y;
+                TraversalPose.pose.position.x = current.index.x*current_map_.info.resolution;
+                TraversalPose.pose.position.y = current.index.y*current_map_.info.resolution;
                 TempPath.poses.push_back(TraversalPose);
                 
-               RCLCPP_WARN(this->get_logger(), "retrace pos(x:%d, y:%d))", current.index.x, current.index.y);//,value.f_score);
+              // RCLCPP_WARN(this->get_logger(), "retrace pos(x:%d, y:%d))", current.index.x, current.index.y);//,value.f_score);
                 if (close.find(current.parentIndex)!= close.end()) { //inside the close 
                   current = close.at(current.parentIndex);//current = close[current.parentIndex];  
                 }
@@ -193,16 +205,21 @@ while (found == false && !open.empty()){
             //RCLCPP_WARN(this->get_logger(), "Caluculating neighbors");
             //RCLCPP_WARN(this->get_logger(), "neighbor pos(x:%d, y:%d)", neighbor.x, neighbor.y);
             //is the if statement correct?
-            
+            RCLCPP_WARN(this->get_logger(), "4");
              
             if (neighbor.x < (adjustedWidth/-2) || neighbor.y  < (adjustedHeight/-2) || neighbor.x >= adjustedWidth/2 || neighbor.y >= adjustedHeight/2 
-            || close.find(neighbor) != close.end()  || current_map_.data[(neighbor.y+adjustedHeight/2)*adjustedWidth + (neighbor.x+adjustedWidth/2)] != 0 ) {//if in close or not traversable
+            || close.find(neighbor) != close.end() ){ 
+            //|| current_map_.data[(neighbor.y+adjustedHeight/2)*adjustedWidth + (neighbor.x+adjustedWidth/2)] != 0 ) {//if in close or not traversable
                 //RCLCPP_WARN(this->get_logger(), "failed pos(x:%d, y:%d)", neighbor.x, neighbor.y);
                 continue;
+                RCLCPP_WARN(this->get_logger(), "8");
                 //obstacle check may not be working
             }
+            //current_map_.data[(  neighbor.y   +adjustedHeight/2)*adjustedWidth +    (neighbor.x+adjustedWidth/2)] != 0 
 
-            
+            // neighbor.y = 
+            //current_map_.info.resolution
+            RCLCPP_WARN(this->get_logger(), "9");
             
             double temp_g_score = (current.f_score-h_score(current.index,end)) +1;//current g score +1
             double temp_h_score = h_score(neighbor,end);
@@ -214,12 +231,14 @@ while (found == false && !open.empty()){
                 AStarNode newNode(neighbor,temp_g_score+temp_h_score,current.index);//set f cost of neighbor and parent
                 open.emplace(neighbor,newNode);
                 //RCLCPP_WARN(this->get_logger(), "adding to open list");
+                RCLCPP_WARN(this->get_logger(), "10");
             }
             else if ((open.at(neighbor).f_score-temp_h_score) > temp_g_score){// new path is shorter
                 //set f cost of neighbor, and add neighbor to open
                 //open[neighbor] = AStarNode(neighbor,temp_g_score+h_score(neighbor,end),current.index);
                 open.at(neighbor).f_score = temp_g_score+temp_h_score;
                 open.at(neighbor).parentIndex = current.index;
+                RCLCPP_WARN(this->get_logger(), "11");
             }     
         }
         //for (const auto& [key,value] : open){//log open set
@@ -231,38 +250,6 @@ while (found == false && !open.empty()){
    }
 
 
-
-/*test pathway
-        geometry_msgs::msg::PoseStamped waypoint1;
-        waypoint1.header.frame_id = "sim_world";
-        waypoint1.pose.position.x = 10.0;
-        waypoint1.pose.position.y = 0.0;
-        waypoint1.pose.orientation.w = 100.0;
-
-        geometry_msgs::msg::PoseStamped waypoint2;
-        waypoint2.header.frame_id = "sim_world";
-        waypoint2.pose.position.x = 15.0;
-        waypoint2.pose.position.y = 0.0;
-        waypoint2.pose.orientation.w = 0.0;
-
-        geometry_msgs::msg::PoseStamped waypoint3;
-        waypoint3.header.frame_id = "sim_world";
-        waypoint3.pose.position.x = 13.0;
-        waypoint3.pose.position.y = 10.0;
-        waypoint3.pose.orientation.w = 0.0;
-
-        geometry_msgs::msg::PoseStamped waypoint4;
-        waypoint4.header.frame_id = "sim_world";
-        waypoint4.pose.position.x = 6;
-        waypoint4.pose.position.y = 5.0;
-        waypoint4.pose.orientation.w = 0.0;
-
-        // Add waypoints to the path message
-        path.poses.push_back(waypoint1);
-        path.poses.push_back(waypoint2);
-        path.poses.push_back(waypoint3);
-        path.poses.push_back(waypoint4);
-        */
        
         path.header.stamp = this->get_clock()->now();
         path.header.frame_id = "sim_world";

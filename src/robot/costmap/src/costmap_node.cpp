@@ -88,7 +88,7 @@ void CostmapNode::laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr sca
 // Step 1: Initialize costmap
     width = 40;
     height = 40;
-    resolution = 1;//0.1;
+    resolution = 0.1;//0.1;
     arrayHeight = height/resolution;
     arrayWidth = width/resolution;
    

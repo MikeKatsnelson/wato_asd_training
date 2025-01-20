@@ -17,9 +17,11 @@ class MapMemoryNode : public rclcpp::Node {
     void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
 
     void updateMap();
+    void publishMap();
     void integrateCostmap();
 
     double quaternionToYaw(const geometry_msgs::msg::Quaternion &q);
+
     
     robot::MapMemoryCore map_memory_;
     
